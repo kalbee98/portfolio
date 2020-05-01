@@ -23,6 +23,9 @@ function Todo($target){
 
 Todo.prototype = {
 	initialize: function(){
+		//イベント処理
+		this.$target.on('keyup', '#add input[type=text]', $.proxy(this._add, this));
+		this.$target.on('click', '#done', $.proxy(this._remove, this));
 		this.show();
 	},
 	show: function(){
@@ -38,14 +41,26 @@ Todo.prototype = {
 		str = str + '</div>'
 		$('#todos', this.$target).html(str);
 	},
-	add: function(){
-		console.log('add');
+	_add: function(){
+		console.log('_add');
+		this.todos.push({
+			id: 10,
+			task: 'test',
+			limit: 'ymd'
+		});
+		this.show();
 	},
-	remove: function(){
-		console.log('delete');
+	_remove: function(){
+		console.log('_remove');
+		this.todos.pop();
+		this.show();
 	},
 	update: function(){
 		console.log('update');
+		this.show();
+	},
+	_select: function(){
+
 	},
 	search: function(){
 		console.log('search');
