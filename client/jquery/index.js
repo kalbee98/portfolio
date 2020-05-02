@@ -4,19 +4,20 @@ function Todo($target){
 	//Todo: localstorage
 	this.todos = [{
 		id: 1,
-		task: 'html',
-		limit: 'today'
+		task: 'LocalStorage 対応',
+		limit: '2020/5/2'
 	},{
 		id: 2,
-		task: 'javascript',
-		limit: 'tomorrow'
+		task: 'インクリメンタルサーチ',
+		limit: '2020/5/2'
+	},{
+		id: 4,
+		task: 'ソート対応',
+		limit: '2020/5/1'
 	},{
 		id: 3,
-		task: '<b>xss</b>',
+		task: '単体テスト',
 		limit: '2020/5/2'
-	}, {
-		id: 5,
-		task: 'ほげふがぴよ'
 	}];
 	this.$target = $target;
 	var maxId = 0;
@@ -24,21 +25,54 @@ function Todo($target){
 		maxId = Math.max(maxId, n.id);
 	});
 	this.maxId = maxId;
+	this.selected = null;
 }
 
 Todo.prototype = {
 	initialize: function(){
 		//イベント処理
 		this.$target.on('click', '#select-all', $.proxy(this._toggle, this));
-		this.$target.on('keyup', '#add input[type=text]', $.proxy(this._add, this));
+		this.$target.on('keyup', '#add input[type=text]', $.proxy(this._register, this));
+		this.$target.on('blur', '#add input[type=text]', $.proxy(this._clear, this));
 		this.$target.on('click', '#done', $.proxy(this._remove, this));
+		this.$target.on('click', 'div.row', $.proxy(this._select, this));
+		this.$target.on('focus', '#search', $.proxy(this.searcher._start, this));
+		this.$target.on('blur', '#search', $.proxy(this.searcher._stop, this));
 		this.show();
 	},
+	/** データ読み込み(localStorage) */
+	load: function(){
+		
+	},
+	/** データ保存(localStoarge) */
+	save: function(){
+
+	},
+	/** タスク一覧の表示 */
 	show: function(){
+		var todos = this.todos.sort(function(a, b){
+			//期限の早い順
+			if((a.limit != null && b.limit == null) || a.limit < b.limit){
+				return -1;
+			}else if((a.limit == null && b.limit != null) || a.limit > b.limit){
+				return 1;
+			}
+			//文字コード順(大文字小文字区別しない))
+			var taskA = a.task.toUpperCase();
+			var taskB = b.task.toUpperCase();
+			if(taskA < taskB){
+				return -1;
+			}else if(taskA > taskB){
+				return 1;
+			}
+			//その他
+			return 0;
+		});
 		var str = '';
 		str = str + '<div class="table">'
 		$.each(this.todos, function(i, n){
-			str = str + '<div class="row" data-id="' + n.id + '">';
+			var hide = (n.hide ? ' hide' : '');
+			str = str + '<div class="row' + hide + '" data-id="' + n.id + '">';
 			str = str + '<div class="cell check"><input type="checkbox" /></div>';
 			str = str + '<div class="cell task">' + escapeHtml(n.task) + '</div>';
 			str = str + '<div class="cell limit">' + escapeHtml(n.limit) + '</div>';
@@ -47,11 +81,12 @@ Todo.prototype = {
 		str = str + '</div>'
 		$('#todos', this.$target).html(str);
 	},
+	/** id採番 */
 	seq: function(){
 		this.maxId++;
 		return this.maxId;	
 	},
-	/* 全選択 or 解除 */
+	/** 全選択 or 解除 */
 	_toggle: function(event){
 		var $checkbox = $('.check input[type=checkbox]', this.$target);
 		if($checkbox.filter(':not(:checked)').length > 0){
@@ -60,22 +95,36 @@ Todo.prototype = {
 			$checkbox.prop('checked', false);
 		}
 	},
-	/* タスク追加 */
-	_add: function(event){
+	/** タスク追加 */
+	_register: function(event){
 		var key = event.key;
 		var text = event.target.value || '';
-		if(key != 'Enter' || text.length == 0){
+		if(key != 'Enter' || text.trim().length === 0){
 			return;
 		}
-		//todo: date input
-		this.todos.push({
-			id: this.seq(),
-			task: text
-		});
+		var texts = splitText(text);
+		if(this.selected){
+			//update
+			var id = this.selected;
+			$.each(this.todos, function(i, n){
+				if(n.id === id){
+					n.task = texts[0];
+					n.limit = texts[1];
+					return false;
+				}
+			})
+		}else{
+			//insert
+			this.todos.push({
+				id: this.seq(),
+				task: texts[0],
+				limit: texts[1]
+			});
+		}
 		event.target.value = '';
 		this.show();
 	},
-	/* タスク削除 */
+	/** タスク削除 */
 	_remove: function(event){
 		var $checked = $('.check input[type=checkbox]:checked', this.$target);
 		var ids = $checked.map(function(i, n){
@@ -86,21 +135,74 @@ Todo.prototype = {
 				return n;
 			}
 		});
+		this.selected = null;
+		$('#add input[type=text]', this.$target).val('');
 		this.show();
 	},
-	update: function(){
-		console.log('update');
-		this.show();
-	},
-	_select: function(){
+	/** 行選択(更新用)) */
+	_select: function(event){
+		if($(event.target).is('input[type=checkbox]')){
+			return;
+		}
+		var $row = $(event.currentTarget).closest('div.row');
+		$row.siblings().removeClass('selected');
+		$row.addClass('selected');
+		$('.check input[type=checkbox]', this.$target).prop('checked', false);
+		$('.check input[type=checkbox]', $row).prop('checked', true);
 
+		var id = $row.data('id');
+		this.selected = id;
+		$.each(this.todos, function(i, n){
+			if(n.id === id){
+				var text = n.task;
+				if(n.limit && n.limit.length > 0){
+					text = text + ' ' + n.limit;
+				}
+				$('#add input[type=text]').val(text).focus();
+				return false;
+			}
+		});
 	},
-	search: function(){
-		console.log('search');
-	}
-}
+	/** 行選択解除 */
+	_clear: function(event){
+		//fixme: onblur(_clear) と click(_select) の順序に依存しないように
+		if(this.selected){
+			this.selected = null;
+			$('div.row.selected', this.$target).removeClass('selected');
+			$('#add input[type=text]', this.$target).val('');
+		}
+	},
+	/** インクリメンタル検索 */
+	searcher: (function(){
+		//setInterval を適宜実行させるためクロージャ実装(onchange はタイミングが不適)
+		var intervalId;
+		var prev;
+		return {
+			_start: function(event){
+				var $target = $(event.target);
+				intervalId = setInterval($.proxy(function(){
+					var query = $target.val().toUpperCase().trim();
+					if(query === prev){
+						return;
+					}
+					prev = query;
+					$.each(this.todos, function(i, n){
+						//query が空文字の場合表示
+						n.hide = (n.task.toUpperCase().indexOf(query) == -1);
+					})
+					this.show();
+				}, this), 200);
+			},
+			_stop: function(event){
+				clearInterval(intervalId);
+			}
+		};
+	})()
+};
 
 //utilities
+
+/** xss 対策 */
 function escapeHtml(str) {
 	str = str || '';
 	str = str.replace(/&/g, '&amp;');
@@ -109,4 +211,20 @@ function escapeHtml(str) {
 	str = str.replace(/"/g, '&quot;');
 	str = str.replace(/'/g, '&#39;');
 	return str;
+}
+
+/** タスクと日付のテキストを分離(日付パースは簡易実装)) */
+function splitText(str) {
+	var pattern = /(\s|　)(\d{1,4}\/\d{1,2}\/\d{1,2})$/;
+	var dateStr = str.match(pattern);
+	if(dateStr == null){
+		return [str, null];
+	}
+
+	//Todo: 日付の妥当性チェック
+	var pair = [];
+	pair.push(str.replace(pattern, ''));
+	var ymd = dateStr[2].trim().split('/');
+	pair.push(ymd[0] + '/' + ymd[1] + '/' + ymd[2]);
+	return pair;
 }
