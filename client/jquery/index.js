@@ -1,24 +1,17 @@
 'use strict';
 
 function Todo($target){
-	//Todo: localstorage
-	this.todos = [{
-		id: 1,
-		task: 'LocalStorage 対応',
-		limit: '2020/5/2'
-	},{
-		id: 2,
-		task: 'インクリメンタルサーチ',
-		limit: '2020/5/2'
-	},{
-		id: 4,
-		task: 'ソート対応',
-		limit: '2020/5/1'
-	},{
-		id: 3,
-		task: '単体テスト',
-		limit: '2020/5/2'
-	}];
+	this.KEY = 'TODOS';
+	/*
+	 * Todoデータ構造
+	 * 	{
+	 *		id: string(ID)
+	 *		task: string(タスク)
+	 *		limit: string(期日)
+	 *		hide: boolean(表示有無/内部データ)
+	 *	}
+	 */
+	this.todos = [];
 	this.$target = $target;
 	var maxId = 0;
 	$.each(this.todos, function(i, n){
@@ -38,15 +31,36 @@ Todo.prototype = {
 		this.$target.on('click', 'div.row', $.proxy(this._select, this));
 		this.$target.on('focus', '#search', $.proxy(this.searcher._start, this));
 		this.$target.on('blur', '#search', $.proxy(this.searcher._stop, this));
+		this.load();
 		this.show();
 	},
 	/** データ読み込み(localStorage) */
 	load: function(){
-		
+		try{
+			localStorage;
+		}catch(e){
+			return;	//not supported!
+		}
+		var todos = localStorage.getItem(this.KEY);
+		if(todos){
+			this.todos = JSON.parse(todos);
+		}
 	},
 	/** データ保存(localStoarge) */
 	save: function(){
-
+		try{
+			localStorage;
+		}catch(e){
+			return;	//not supported!
+		}
+		var todos = $.map(this.todos, function(n, i){
+			return {
+				id: n.id,
+				task: n.task,
+				limit: (n.limit ? n.limit : undefined)
+			};
+		});
+		localStorage.setItem(this.KEY, JSON.stringify(todos));
 	},
 	/** タスク一覧の表示 */
 	show: function(){
@@ -84,7 +98,7 @@ Todo.prototype = {
 	/** id採番 */
 	seq: function(){
 		this.maxId++;
-		return this.maxId;	
+		return this.maxId;
 	},
 	/** 全選択 or 解除 */
 	_toggle: function(event){
@@ -122,6 +136,7 @@ Todo.prototype = {
 			});
 		}
 		event.target.value = '';
+		this.save();
 		this.show();
 	},
 	/** タスク削除 */
@@ -137,6 +152,7 @@ Todo.prototype = {
 		});
 		this.selected = null;
 		$('#add input[type=text]', this.$target).val('');
+		this.save();
 		this.show();
 	},
 	/** 行選択(更新用)) */
