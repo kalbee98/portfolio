@@ -13,11 +13,7 @@ function Todo($target){
 	 */
 	this.todos = [];
 	this.$target = $target;
-	var maxId = 0;
-	$.each(this.todos, function(i, n){
-		maxId = Math.max(maxId, n.id);
-	});
-	this.maxId = maxId;
+	this.maxId = 0;
 	this.selected = null;
 }
 
@@ -44,6 +40,11 @@ Todo.prototype = {
 		var todos = localStorage.getItem(this.KEY);
 		if(todos){
 			this.todos = JSON.parse(todos);
+			var maxId = 0;
+			$.each(this.todos, function(i, n){
+				maxId = Math.max(maxId, n.id);
+			});
+			this.maxId = maxId;
 		}
 	},
 	/** データ保存(localStoarge) */
