@@ -23,6 +23,11 @@ body {
 	display: table-cell;
 }
 
+/* 非表示 */
+.hide {
+	display: none;
+}
+
 /* 個別 */
 
 #header {
@@ -90,6 +95,9 @@ body {
 #todos .row:hover {
 	background-color: #E8EEF7;
 }
+#todos .row.selected {
+	background-color: #FFFFCC;
+}
 #todos .cell {
 	border-top: 1px solid #CACACA;
 	vertical-align: middle;
@@ -104,7 +112,11 @@ body {
 }
 #todos .task {
 	font-size: 16px;
+	color: #575757;
 	width: auto;
+}
+#todos .row.selected .task{
+	text-decoration: underline;
 }
 #todos .limit {
 	font-size: 15px;
