@@ -106,8 +106,10 @@ Todo.prototype = {
 		var $checkbox = $('.check input[type=checkbox]', this.$target);
 		if($checkbox.filter(':not(:checked)').length > 0){
 			$checkbox.prop('checked', true);
+			$(event.target).attr('value', '解除');
 		} else {
 			$checkbox.prop('checked', false);
+			$(event.target).attr('value', '選択');
 		}
 	},
 	/** タスク追加 */
