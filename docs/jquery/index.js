@@ -21,7 +21,7 @@ Todo.prototype = {
 	initialize: function(){
 		//イベント処理
 		this.$target.on('click', '#select-all', $.proxy(this._toggle, this));
-		this.$target.on('keyup', '#add input[type=text]', $.proxy(this._register, this));
+		this.$target.on('keypress', '#add input[type=text]', $.proxy(this._register, this));
 		this.$target.on('blur', '#add input[type=text]', $.proxy(this._clear, this));
 		this.$target.on('click', '#done', $.proxy(this._remove, this));
 		this.$target.on('click', 'div.row', $.proxy(this._select, this));
@@ -106,12 +106,17 @@ Todo.prototype = {
 		var $checkbox = $('.check input[type=checkbox]', this.$target);
 		if($checkbox.filter(':not(:checked)').length > 0){
 			$checkbox.prop('checked', true);
+			$(event.target).attr('value', '解除');
 		} else {
 			$checkbox.prop('checked', false);
+			$(event.target).attr('value', '選択');
 		}
 	},
 	/** タスク追加 */
 	_register: function(event){
+		// IME 非動作中に Enter 入力を判定するため keypress イベントを利用
+		// keydown, keyup は IME 動作中でも Enter が発火する
+		// isComposing で IME 判定が可能だがブラウザ間で動作が異なる
 		var key = event.key;
 		var text = event.target.value || '';
 		if(key != 'Enter' || text.trim().length === 0){
