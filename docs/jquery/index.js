@@ -116,7 +116,7 @@ Todo.prototype = {
 	_register: function(event){
 		// IME 非動作中に Enter 入力を判定するため keypress イベントを利用
 		// keydown, keyup は IME 動作中でも Enter が発火する
-		// isComposing で IME 判定が可能だがブラウザ間で動作が異なる
+		// isComposing で IME 判定が可能だがブラウザ間で動作が異なる
 		var key = event.key;
 		var text = event.target.value || '';
 		if(key != 'Enter' || text.trim().length === 0){
@@ -133,6 +133,7 @@ Todo.prototype = {
 					return false;
 				}
 			})
+			this.selected = null;
 		}else{
 			//insert
 			this.todos.push({
