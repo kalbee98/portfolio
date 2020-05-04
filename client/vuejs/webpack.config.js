@@ -3,6 +3,8 @@ const path = require('path')
 // vue-loader@15から必要
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
+const CopyPlugin = require('copy-webpack-plugin')
+
 module.exports = {
     // エントリポイントのファイル
     entry: './src/index.js',
@@ -36,7 +38,10 @@ module.exports = {
             vue$: 'vue/dist/vue.esm.js',
         },
     },
-    plugins: [new VueLoaderPlugin()],
+    plugins: [
+        new VueLoaderPlugin(),
+        new CopyPlugin([{ from: './public' }])
+    ],
     devServer: {
         // webpackの扱わないファイル(HTMLや画像など)が入っているディレクトリ
         contentBase: path.resolve(__dirname, 'public')
