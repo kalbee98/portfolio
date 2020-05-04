@@ -28,6 +28,10 @@ module.exports = {
                 test: /\.css$/,
                 use: ['vue-style-loader', 'css-loader'] // css-loader -> vue-style-loaderの順で通していく
             },
+            {
+                test: /\.less$/,
+                use: ['vue-style-loader', 'css-loader', 'less-loader']
+            }
         ]
     },
     resolve: {

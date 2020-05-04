@@ -21,6 +21,8 @@
     "babel-loader": "^8.1.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
+    "less": "^3.11.1",
+    "less-loader": "^6.0.0",
     "style-loader": "^1.2.1",
     "vue-loader": "^15.9.2",
     "vue-template-compiler": "^2.6.11",

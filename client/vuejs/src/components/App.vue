@@ -13,7 +13,7 @@ export default {
   </div>
 </template>
 
-<style scoped>
+<style lang="less" scoped>
 * {
   border: 1px solid red;
 }
