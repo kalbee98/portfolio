@@ -36,7 +36,7 @@ module.exports = {
             vue$: 'vue/dist/vue.esm.js',
         },
     },
-    plugins: [VueLoaderPlugin()],
+    plugins: [new VueLoaderPlugin()],
     devServer: {
         // webpackの扱わないファイル(HTMLや画像など)が入っているディレクトリ
         contentBase: path.resolve(__dirname, 'public')
