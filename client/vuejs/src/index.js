@@ -1,5 +1,5 @@
+import './less/index.less';
 import Vue from 'vue'
-
 import App from './components/App' // 作ったやつ
 
 new Vue({
