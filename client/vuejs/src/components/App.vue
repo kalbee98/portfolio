@@ -1,6 +1,5 @@
 <script>
 import Config from "./../config.js";
-import Counter from "./Counter";
 
 export default {
   data(){
@@ -12,18 +11,14 @@ export default {
        *		task: string(タスク)
        *		limit: Date(期日)
        *		checked: boolean(チェック有無: 内部データ)
-       *    selected: boolean(行選択: 内部データ)
        *	}
        */
       todos: [],
-      // maxid: 0,
-      selected: null,
-      message: 'Hello Vue: ' + new Date(),
-      seen: true
+      selected: null
     }
   },
   created(){
-    console.log('_created', Config);
+    console.log('_created');
     this.load();
   },
   mounted(){
@@ -37,6 +32,7 @@ export default {
   },
   methods: {
     load(){
+      console.log('_load');
       let todos = localStorage.getItem(Config.LOCAL_STORAGE_KEY);
       if(todos){
         todos = JSON.parse(todos);
@@ -44,23 +40,23 @@ export default {
           return {
             id: todo.id,
             task: todo.task,
-            limit: (todo.limit ? new Date(todo.limit) : undefined)
+            limit: (todo.limit ? new Date(todo.limit) : undefined),
+            checked: false
           };
         });
         this.todos = todos;
       }
     },
     save(){
-      if(this.todos){
-        const todos = this.todos.map((todo) => {
-          return {
-            id: todo.id,
-            task: todo.task,
-            limit: (todo.limit ? todo.limit: undefined)
-          };
-        });
-        localStorage.setItem(Config.LOCAL_STORAGE_KEY, JSON.stringify(todos));
-      }
+      console.log('_save');
+      const todos = this.todos.map((todo) => {
+        return {
+          id: todo.id,
+          task: todo.task,
+          limit: (todo.limit ? todo.limit: undefined)
+        };
+      });
+      localStorage.setItem(Config.LOCAL_STORAGE_KEY, JSON.stringify(todos));
     },
     formatDate(date){
       let arr = [];
@@ -74,7 +70,7 @@ export default {
       return arr.join('');
     },
     register(event){
-      console.log('register: ', event.target.value);
+      console.log('_register: ');
       const text = event.target.value || '';
       if(text.trim().legnth === 0){
         return;
@@ -90,11 +86,34 @@ export default {
       this.save();
     },
     remove(event){
-      
+      console.log('_remove');
+      this.todos = this.todos.filter((todo) => {
+        return !todo.checked;
+      });
+      this.save();
+    },
+    select(event){
+      console.log('_select');
+      //todo: $(selector).is() 相当の操作?
+      if(event.target.getAttribute('type') === 'checkbox'){
+        return;
+      }
+      const id = event.currentTarget.dataset.id;
+      this.selected = id;
+      this.todos.forEach((todo) => {
+        todo.checked = (todo.id == id);
+      });
+    },
+    clear(event){
+      console.log('_clear');
+    },
+    search(event){
+      console.log('_search');
     }
   },
   computed: {
     maxId(){
+      console.log('_maxid');
       let max = 0;
       if(this.todos){
         this.todos.forEach((todo) => {
@@ -103,37 +122,48 @@ export default {
       }
       return max;
     },
-    checkCount(){
-      return this.todos.length;
+    checked(){
+      console.log('_checked')
+      const checked = this.todos.some((todo) => {
+        return todo.checked;
+      });
+      return checked;
+    },
+    allChecked(){
+      console.log('_allChecked');
+      const all = this.todos.every((todo) => {
+        return todo.checked;
+      });
+      console.log('all', all);
+      return all;
     }
   },
   watch: {
     todos(){
       console.log('watch:todos', arguments);
+    },
+    selected(){
+      console.log('watch:selected', this.selected);
     }
-  },
-  components: { Counter }
+  }
 };
 </script>
 
 <template>
   <div>
-    <!-- <span v-if="seen">Now You see me</span><br />
-    test: {{ checkCount }} -->
     <div id="todo-list">
       <div id="menu">
         <input id="select-all" type="button" value="選択" />
-        <input id="done" type="button" value="完了" v-bind:disabled="!selected" />
-        <input id="search" type="text" placeholder="検索" />
+        <input id="done" type="button" value="完了" v-on:click="remove" v-bind:disabled="!checked" />
+        <input id="search" type="text" v-on:input="search" placeholder="検索" />
       </div>
       <div id="add">
         <input id="edit" type="text" v-on:keypress.enter="register" placeholder="タスクを入力" />
       </div>
       <div id="todos">
         <div class="table">
-          <div class="row" v-for="todo in todos" v-bind:data-id="todo.id" v-bind:key="todo.id">
+          <div class="row" v-bind:class="{selected: todo.id == selected}" v-for="todo in todos" v-on:click="select" v-bind:data-id="todo.id" v-bind:key="todo.id">
             <div class="cell check">
-              <!-- <input type="checkbox" v-bind:checked="todo.checked" /> -->
               <input type="checkbox" v-model="todo.checked" />
             </div>
             <div class="cell task">
@@ -146,19 +176,8 @@ export default {
         </div>
       </div>
     </div>
-    <!-- <del>
-      <p class="sample">Hello, World!</p>
-      <counter v-bind:init="10" class="sample"/>
-    </del> -->
   </div>
 </template>
-
-<style>
-/* .sample {
-  border: 1px solid khaki;
-  background-color: linen;
-} */
-</style>
 
 <style lang="less" scoped>
 #header {
