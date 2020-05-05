@@ -1,23 +1,115 @@
 <script>
+import Config from "./../config.js";
 import Counter from "./Counter";
 
 export default {
   data(){
     return {
-      todos: [{
-        id:'1',
-        task: 'html',
-        limit: new Date()
-      }, {
-        id:'2',
-        task: 'localStorage',
-      }, {
-        id:'3',
-        task: 'binding',
-        limit: new Date(2020,0,1)
-      }],
-      maxid: 0,
-      selected: null
+      /*
+       * Todoデータ構造
+       * 	{
+       *		id: string(ID)
+       *		task: string(タスク)
+       *		limit: Date(期日)
+       *		checked: boolean(チェック有無: 内部データ)
+       *    selected: boolean(行選択: 内部データ)
+       *	}
+       */
+      todos: [],
+      // maxid: 0,
+      selected: null,
+      message: 'Hello Vue: ' + new Date(),
+      seen: true
+    }
+  },
+  created(){
+    console.log('_created', Config);
+    this.load();
+  },
+  mounted(){
+    console.log('_mounted');
+  },
+  updated(){
+    console.log('_updated');
+  },
+  destroyed(){
+    console.log('_destroyed');
+  },
+  methods: {
+    load(){
+      let todos = localStorage.getItem(Config.LOCAL_STORAGE_KEY);
+      if(todos){
+        todos = JSON.parse(todos);
+        todos = todos.map((todo) => {
+          return {
+            id: todo.id,
+            task: todo.task,
+            limit: (todo.limit ? new Date(todo.limit) : undefined)
+          };
+        });
+        this.todos = todos;
+      }
+    },
+    save(){
+      if(this.todos){
+        const todos = this.todos.map((todo) => {
+          return {
+            id: todo.id,
+            task: todo.task,
+            limit: (todo.limit ? todo.limit: undefined)
+          };
+        });
+        localStorage.setItem(Config.LOCAL_STORAGE_KEY, JSON.stringify(todos));
+      }
+    },
+    formatDate(date){
+      let arr = [];
+      if(date){
+        arr.push(date.getFullYear());
+        arr.push('/');
+        arr.push(date.getMonth() + 1);
+        arr.push('/');
+        arr.push(date.getDate());
+      }
+      return arr.join('');
+    },
+    register(event){
+      console.log('register: ', event.target.value);
+      const text = event.target.value || '';
+      if(text.trim().legnth === 0){
+        return;
+      }
+      this.todos.push({
+        id: this.maxId + 1,
+        task: text,
+        limit: new Date(new Date().getFullYear(), 
+          Math.floor(Math.random() * 11), 
+          Math.floor(Math.random() * 31))
+      });
+      event.target.value = '';
+      this.save();
+    },
+    remove(event){
+      
+    }
+  },
+  computed: {
+    maxId(){
+      let max = 0;
+      if(this.todos){
+        this.todos.forEach((todo) => {
+          max = Math.max(todo.id);
+        });
+      }
+      return max;
+    },
+    checkCount(){
+      return this.todos.length;
+    }
+  },
+  watch: {
+    todos(){
+      console.log('watch:todos', arguments);
     }
   },
   components: { Counter }
@@ -26,35 +118,46 @@ export default {
 
 <template>
   <div>
+    <!-- <span v-if="seen">Now You see me</span><br />
+    test: {{ checkCount }} -->
     <div id="todo-list">
       <div id="menu">
         <input id="select-all" type="button" value="選択" />
-        <input id="done" type="button" value="完了" />
+        <input id="done" type="button" value="完了" v-bind:disabled="!selected" />
         <input id="search" type="text" placeholder="検索" />
       </div>
-      <div id="add"><input type="text" placeholder="タスクを入力" /></div>
+      <div id="add">
+        <input id="edit" type="text" v-on:keypress.enter="register" placeholder="タスクを入力" />
+      </div>
       <div id="todos">
-        <div class="table" v-show="false">
-          <div class="row">
-            <div class="cell check"><input type="checkbox" /></div>
-            <div class="cell task"></div>
-            <div class="cell limit"></div>
+        <div class="table">
+          <div class="row" v-for="todo in todos" v-bind:data-id="todo.id" v-bind:key="todo.id">
+            <div class="cell check">
+              <!-- <input type="checkbox" v-bind:checked="todo.checked" /> -->
+              <input type="checkbox" v-model="todo.checked" />
+            </div>
+            <div class="cell task">
+              {{todo.task}}
+            </div>
+            <div class="cell limit">
+              {{formatDate(todo.limit)}}
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <del>
+    <!-- <del>
       <p class="sample">Hello, World!</p>
-      <counter class="sample"/>
-    </del>
+      <counter v-bind:init="10" class="sample"/>
+    </del> -->
   </div>
 </template>
 
 <style>
-.sample {
+/* .sample {
   border: 1px solid khaki;
   background-color: linen;
-}
+} */
 </style>
 
 <style lang="less" scoped>

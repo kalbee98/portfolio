@@ -5,6 +5,7 @@ export default {
       count: 0,
     }
   },
+  props: ['init'],
   methods: {
     increment() {
       this.count += 1
