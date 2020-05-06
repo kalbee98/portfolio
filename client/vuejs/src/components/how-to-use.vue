@@ -1,22 +1,3 @@
-<script>
-export default {
-  data() {
-    return {
-      count: 0
-    };
-  },
-  props: ["init"],
-  methods: {
-    increment() {
-      this.count += 1;
-    },
-    decrement() {
-      this.count -= 1;
-    }
-  }
-};
-</script>
-
 <template>
   <aside>
     <h2>How to use</h2>
