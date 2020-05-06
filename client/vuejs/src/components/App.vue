@@ -21,12 +21,12 @@ export default {
   },
   computed: {
     sorted(){
-      // sort() は破壊的操作のため concat() で複製
-      return this.todos.concat().sort((a, b) => {
-        //期限の早い順
-        if((a.limit != null && b.limit == null) || a.limit < b.limit){
+      // sort() は破壊的操作のためスプレッド構文で複製
+      return [...this.todos].sort((a, b) => {
+        //期限の早い順(null は 期日があるタスクより後ろにするため null チェック))
+        if((a.limit != null && b.limit == null) || (a.limit && a.limit < b.limit)){
           return -1;
-        }else if((a.limit == null && b.limit != null) || a.limit > b.limit){
+        }else if((a.limit == null && b.limit != null) || (b.limit && a.limit > b.limit)){
           return 1;
         }
         //文字コード順(大文字小文字区別しない))
@@ -42,7 +42,6 @@ export default {
       });
     },
     maxId(){
-      console.log('_maxid');
       let max = 0;
       if(this.todos){
         this.todos.forEach((todo) => {
@@ -52,38 +51,24 @@ export default {
       return max;
     },
     checked(){
-      console.log('_checked')
       const checked = this.todos.some((todo) => {
         return todo.checked;
       });
       return checked;
     },
     allChecked(){
-      console.log('_allChecked');
       const all = this.todos.every((todo) => {
         return todo.checked;
       });
-      console.log('all', all);
       return all;
     }
   },
   created(){
-    console.log('_created');
     this.load();
-  },
-  mounted(){
-    console.log('_mounted');
-  },
-  updated(){
-    console.log('_updated');
-  },
-  destroyed(){
-    console.log('_destroyed');
   },
   methods: {
     /** データ読み込み(localStorage) */
     load(){
-      console.log('_load');
       let todos = localStorage.getItem(Config.LOCAL_STORAGE_KEY);
       if(todos){
         todos = JSON.parse(todos);
@@ -91,7 +76,7 @@ export default {
           return {
             id: todo.id,
             task: todo.task,
-            limit: (todo.limit ? new Date(todo.limit) : undefined),
+            limit: (todo.limit ? new Date(todo.limit) : null),
             checked: false,
             visible: true
           };
@@ -101,7 +86,6 @@ export default {
     },
     /** データ保存(localStoarge) */
     save(){
-      console.log('_save');
       const todos = this.todos.map((todo) => {
         return {
           id: todo.id,
@@ -113,14 +97,12 @@ export default {
     },
     /** タスク追加,更新 */
     register(event){
-      console.log('_register');
       let text = event.target.value || '';
       let limit;
       if(text.trim().legnth === 0){
         return;
       }
       [text, limit] = this.parseInputText(text);
-      console.log('text: ', text, 'limit: ', limit);
       if(this.selected){
         //update
         const todo = this.todos.find((todo) => {
@@ -145,7 +127,6 @@ export default {
     },
     /** タスク削除 */
     remove(event){
-      console.log('_remove');
       this.todos = this.todos.filter((todo) => {
         return !todo.checked;
       });
@@ -160,7 +141,6 @@ export default {
     },
     /** 行選択(更新用)) */
     select(event){
-      console.log('_select');
       //todo: $(selector).is() 相当の操作?
       if(event.target.getAttribute('type') === 'checkbox'){
         return;
@@ -179,7 +159,6 @@ export default {
     },
     /** 行選択解除 */
     clear(event){
-      console.log('_clear');
       if(this.selected){
         this.selected = null;
         this.$refs.input.value = '';
@@ -187,7 +166,6 @@ export default {
     },
     /** インクリメンタル検索 */
     search(event){
-      console.log('_search');
       this.todos.forEach((todo) => {
         todo.visible = todo.task.includes(event.target.value);
       });
@@ -220,14 +198,6 @@ export default {
       const limit = new Date(y, m - 1, d);
 
       return [str.replace(regexp, ' ').trim(), limit];
-    }
-  },
-  watch: {
-    todos(){
-      console.log('watch:todos', arguments);
-    },
-    selected(){
-      console.log('watch:selected', this.selected);
     }
   }
 };
