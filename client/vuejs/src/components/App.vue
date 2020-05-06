@@ -6,13 +6,13 @@ export default {
     return {
       /**
        * Todoデータ構造
-       * 	{
-       *		id: string(ID)
-       *		task: string(タスク)
-       *		limit: Date(期日)
-       *		checked: boolean(チェック有無: 内部データ)
+       *  {
+       *    id: string(ID)
+       *    task: string(タスク)
+       *    limit: Date(期日)
+       *    checked: boolean(チェック有無: 内部データ)
        *    visible: boolean(インクリメンタル検索結果: 内部データ)
-       *	}
+       *  }
        */
       todos: [],
       /** 選択行(ID) */
@@ -30,8 +30,8 @@ export default {
           return 1;
         }
         //文字コード順(大文字小文字区別しない))
-        var taskA = a.task.toUpperCase();
-        var taskB = b.task.toUpperCase();
+        const taskA = a.task.toUpperCase();
+        const taskB = b.task.toUpperCase();
         if (taskA < taskB) {
           return -1;
         } else if (taskA > taskB) {
@@ -57,6 +57,7 @@ export default {
       return checked;
     },
     allChecked() {
+      //todo: 0件対応
       const all = this.todos.every((todo) => {
         return todo.checked;
       });
@@ -167,12 +168,15 @@ export default {
     /** インクリメンタル検索 */
     search(event) {
       this.todos.forEach((todo) => {
+        //todo: ignoreCase
+        //todo: 変換中末尾(全角英字)対応
+        //todo: composition 対応
         todo.visible = todo.task.includes(event.target.value);
       });
     },
     /** 日付フォーマット */
     formatDate(date) {
-      let arr = [];
+      const arr = [];
       if (date) {
         arr.push(date.getFullYear());
         arr.push('/');
@@ -184,10 +188,12 @@ export default {
     },
     /** 入力タスク解析(yyyy/MM/dd を期限(limit)として入力から切り出す) */
     parseInputText(text) {
+      //todo: yyyy/MM/dd or MM/dd 対応
       const str = ' ' + text + ' ';
       const regexp = /((\s|　)+\d{1,4}\/\d{1,2}\/\d{1,2}(\s|　)+)/g;
 
       //日付表現のチェック
+      //todo: check invalid date input
       const dateStrs = str.match(regexp);
       if (dateStrs == null) {
         return [text, null];
@@ -223,6 +229,7 @@ export default {
               <input type="checkbox" v-model="todo.checked" />
             </div>
             <div class="cell task">
+              <!-- todo: text-overflow: ellipsis -->
               {{todo.task}}
             </div>
             <div class="cell limit">
